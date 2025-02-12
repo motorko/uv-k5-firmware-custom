@@ -17,6 +17,10 @@
 #ifndef SPECTRUM_H
 #define SPECTRUM_H
 
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
 #include "../bitmaps.h"
 #include "../board.h"
 #include "../bsp/dp32g030/gpio.h"
@@ -34,9 +38,6 @@
 #include "../radio.h"
 #include "../settings.h"
 #include "../ui/helper.h"
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
 
 static const uint8_t DrawingEndY = 40;
 
@@ -45,7 +46,7 @@ static const uint8_t U8RssiMap[] = {
 };
 
 static const uint16_t scanStepValues[] = {
-    1, 10, 50, 100, 250, 500, 625, 833, 
+    1,    10,   50,   100,  250,  500,  625,   833,
     1000, 1250, 1500, 2000, 2500, 5000, 10000,
 };
 
@@ -53,35 +54,35 @@ static const uint16_t scanStepBWRegValues[] = {
     //     RX  RXw TX  BW
     // 0b0 000 000 001 01 1000
     // 1
-    0b0000000001011000, // 6.25
+    0b0000000001011000,  // 6.25
     // 10
-    0b0000000001011000, // 6.25
+    0b0000000001011000,  // 6.25
     // 50
-    0b0000000001011000, // 6.25
+    0b0000000001011000,  // 6.25
     // 100
-    0b0000000001011000, // 6.25
+    0b0000000001011000,  // 6.25
     // 250
-    0b0000000001011000, // 6.25
+    0b0000000001011000,  // 6.25
     // 500
-    0b0010010001011000, // 6.25
+    0b0010010001011000,  // 6.25
     // 625
-    0b0100100001011000, // 6.25
+    0b0100100001011000,  // 6.25
     // 833
-    0b0110110001001000, // 6.25
+    0b0110110001001000,  // 6.25
     // 1000
-    0b0110110001001000, // 6.25
+    0b0110110001001000,  // 6.25
     // 1250
-    0b0111111100001000, // 6.25
+    0b0111111100001000,  // 6.25
     // 2500
-    0b0011011000101000, // 25
+    0b0011011000101000,  // 25
     // 10000
-    0b0011011000101000, // 25
+    0b0011011000101000,  // 25
 };
 
 static const uint16_t listenBWRegValues[] = {
-    0b0011011000101000, // 25
-    0b0111111100001000, // 12.5
-    0b0100100001011000, // 6.25
+    0b0011011000101000,  // 25
+    0b0111111100001000,  // 12.5
+    0b0100100001011000,  // 6.25
 };
 
 typedef enum State {
@@ -117,15 +118,14 @@ typedef enum ScanStep {
 } ScanStep;
 
 typedef struct SpectrumSettings {
-  uint32_t frequencyChangeStep;  
+  uint32_t frequencyChangeStep;
   StepsCount stepsCount;
   ScanStep scanStepIndex;
-  uint16_t scanDelay;
   uint16_t rssiTriggerLevel;
   BK4819_FilterBandwidth_t bw;
   BK4819_FilterBandwidth_t listenBw;
   int dbMin;
-  int dbMax;  
+  int dbMax;
   ModulationMode_t modulationType;
   bool backlightState;
 } SpectrumSettings;
