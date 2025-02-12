@@ -21,4 +21,3 @@ void UI_DisplayReleaseKeys(void);
 void UI_DisplayWelcome(void);
 
 #endif
-
