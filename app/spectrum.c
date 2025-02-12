@@ -14,6 +14,7 @@
  *     limitations under the License.
  */
 #include "app/spectrum.h"
+
 #include "am_fix.h"
 #include "audio.h"
 #include "misc.h"
@@ -69,7 +70,6 @@ const uint8_t modTypeReg47Values[] = {1, 7, 5};
 SpectrumSettings settings = {.stepsCount = STEPS_64,
                              .scanStepIndex = S_STEP_25_0kHz,
                              .frequencyChangeStep = 80000,
-                             .scanDelay = 3200,
                              .rssiTriggerLevel = 150,
                              .backlightState = true,
                              .bw = BK4819_FILTER_BW_WIDE,
@@ -121,9 +121,8 @@ static uint16_t GetRegMenuValue(uint8_t st) {
   return (BK4819_ReadRegister(s.num) >> s.offset) & s.mask;
 }
 
-void LockAGC()
-{
-  RADIO_SetupAGC(settings.modulationType==MODULATION_AM, lockAGC);
+void LockAGC() {
+  RADIO_SetupAGC(settings.modulationType == MODULATION_AM, lockAGC);
   lockAGC = true;
 }
 
@@ -131,8 +130,7 @@ static void SetRegMenuValue(uint8_t st, bool add) {
   uint16_t v = GetRegMenuValue(st);
   RegisterSpec s = registerSpecs[st];
 
-  if(s.num == BK4819_REG_13)
-    LockAGC();
+  if (s.num == BK4819_REG_13) LockAGC();
 
   uint16_t reg = BK4819_ReadRegister(s.num);
   if (add && v <= s.mask - s.inc) {
@@ -216,32 +214,25 @@ void SetState(State state) {
 static void ToggleAFBit(bool on) {
   uint16_t reg = BK4819_ReadRegister(BK4819_REG_47);
   reg &= ~(1 << 8);
-  if (on)
-    reg |= on << 8;
+  if (on) reg |= on << 8;
   BK4819_WriteRegister(BK4819_REG_47, reg);
 }
 
-static const BK4819_REGISTER_t registers_to_save[] ={
-  BK4819_REG_30,
-  BK4819_REG_37,
-  BK4819_REG_3D,
-  BK4819_REG_43,
-  BK4819_REG_47,
-  BK4819_REG_48,
-  BK4819_REG_7E,
+static const BK4819_REGISTER_t registers_to_save[] = {
+    BK4819_REG_30, BK4819_REG_37, BK4819_REG_3D, BK4819_REG_43,
+    BK4819_REG_47, BK4819_REG_48, BK4819_REG_7E,
 };
 
-static uint16_t registers_stack [sizeof(registers_to_save)];
+static uint16_t registers_stack[sizeof(registers_to_save)];
 
 static void BackupRegisters() {
-  for (uint32_t i = 0; i < ARRAY_SIZE(registers_to_save); i++){
+  for (uint32_t i = 0; i < ARRAY_SIZE(registers_to_save); i++) {
     registers_stack[i] = BK4819_ReadRegister(registers_to_save[i]);
   }
 }
 
 static void RestoreRegisters() {
-
-  for (uint32_t i = 0; i < ARRAY_SIZE(registers_to_save); i++){
+  for (uint32_t i = 0; i < ARRAY_SIZE(registers_to_save); i++) {
     BK4819_WriteRegister(registers_to_save[i], registers_stack[i]);
   }
 }
@@ -249,8 +240,7 @@ static void RestoreRegisters() {
 static void ToggleAFDAC(bool on) {
   uint32_t Reg = BK4819_ReadRegister(BK4819_REG_30);
   Reg &= ~(1 << 9);
-  if (on)
-    Reg |= (1 << 9);
+  if (on) Reg |= (1 << 9);
   BK4819_WriteRegister(BK4819_REG_30, Reg);
 }
 
@@ -277,10 +267,20 @@ bool IsCenterMode() { return settings.scanStepIndex < S_STEP_2_5kHz; }
 // scan step in 0.01khz
 uint16_t GetScanStep() { return scanStepValues[settings.scanStepIndex]; }
 
-uint16_t GetStepsCount()
-{
 #ifdef ENABLE_SCAN_RANGES
-  if(gScanRangeStart) {
+void SetDynamicStepsCount() {
+  uint16_t steps = (gScanRangeStop - gScanRangeStart) / GetScanStep();
+
+  settings.stepsCount = (steps >= 128)  ? STEPS_128
+                        : (steps >= 64) ? STEPS_64
+                        : (steps >= 32) ? STEPS_32
+                                        : STEPS_16;
+}
+#endif
+
+uint16_t GetStepsCount() {
+#ifdef ENABLE_SCAN_RANGES
+  if (gScanRangeStart) {
     return (gScanRangeStop - gScanRangeStart) / GetScanStep();
   }
 #endif
@@ -319,8 +319,8 @@ uint16_t GetRssi() {
   }
   uint16_t rssi = BK4819_GetRSSI();
 #ifdef ENABLE_AM_FIX
-  if(settings.modulationType==MODULATION_AM && gSetting_AM_fix)
-    rssi += AM_fix_get_gain_diff()*2;
+  if (settings.modulationType == MODULATION_AM && gSetting_AM_fix)
+    rssi += AM_fix_get_gain_diff() * 2;
 #endif
   return rssi;
 }
@@ -375,8 +375,7 @@ static void InitScan() {
 
 static void ResetBlacklist() {
   for (int i = 0; i < 128; ++i) {
-    if (rssiHistory[i] == RSSI_MAX_VALUE)
-      rssiHistory[i] = 0;
+    if (rssiHistory[i] == RSSI_MAX_VALUE) rssiHistory[i] = 0;
   }
 #ifdef ENABLE_SCAN_RANGES
   memset(blacklistFreqs, 0, sizeof(blacklistFreqs));
@@ -428,22 +427,20 @@ static void UpdatePeakInfo() {
     UpdatePeakInfoForce();
 }
 
-static void SetRssiHistory(uint16_t idx, uint16_t rssi)
-{
+static void SetRssiHistory(uint16_t idx, uint16_t rssi) {
 #ifdef ENABLE_SCAN_RANGES
-  if(scanInfo.measurementsCount > 128) {
-    uint8_t i = (uint32_t)ARRAY_SIZE(rssiHistory) * 1000 / scanInfo.measurementsCount * idx / 1000;
-    if(rssiHistory[i] < rssi || isListening)
-      rssiHistory[i] = rssi;
-    rssiHistory[(i+1)%128] = 0;
+  if (scanInfo.measurementsCount > 128) {
+    uint8_t i = (uint32_t)ARRAY_SIZE(rssiHistory) * 1000 /
+                scanInfo.measurementsCount * idx / 1000;
+    if (rssiHistory[i] < rssi || isListening) rssiHistory[i] = rssi;
+    rssiHistory[(i + 1) % 128] = 0;
     return;
   }
 #endif
   rssiHistory[idx] = rssi;
 }
 
-static void Measure()
-{
+static void Measure() {
   uint16_t rssi = scanInfo.rssi = GetRssi();
   SetRssiHistory(scanInfo.i, rssi);
 }
@@ -475,7 +472,7 @@ static void UpdateRssiTriggerLevel(bool inc) {
 static void UpdateDBMax(bool inc) {
   if (inc && settings.dbMax < 10) {
     settings.dbMax += 1;
-  } else if (!inc && settings.dbMax > 12+settings.dbMin) {
+  } else if (!inc && settings.dbMax > 12 + settings.dbMin) {
     settings.dbMax -= 1;
   } else {
     return;
@@ -489,12 +486,21 @@ static void UpdateDBMax(bool inc) {
 
 static void UpdateScanStep(bool inc) {
   if (inc) {
-    settings.scanStepIndex = settings.scanStepIndex != S_STEP_100_0kHz ? settings.scanStepIndex + 1 : 0;
+    settings.scanStepIndex = settings.scanStepIndex != S_STEP_100_0kHz
+                                 ? settings.scanStepIndex + 1
+                                 : 0;
   } else {
-    settings.scanStepIndex = settings.scanStepIndex != 0 ? settings.scanStepIndex - 1 : S_STEP_100_0kHz;
+    settings.scanStepIndex = settings.scanStepIndex != 0
+                                 ? settings.scanStepIndex - 1
+                                 : S_STEP_100_0kHz;
   }
 
   settings.frequencyChangeStep = GetBW() >> 1;
+
+#ifdef ENABLE_SCAN_RANGES
+  SetDynamicStepsCount();
+#endif
+
   RelaunchScan();
   ResetBlacklist();
   redrawScreen = true;
@@ -604,8 +610,7 @@ static void UpdateFreqInput(KEY_Code_t key) {
   }
   if (key == KEY_EXIT) {
     freqInputIndex--;
-    if (freqInputDotIndex == freqInputIndex)
-      freqInputDotIndex = 0;
+    if (freqInputDotIndex == freqInputIndex) freqInputDotIndex = 0;
   } else {
     freqInputArr[freqInputIndex++] = key;
   }
@@ -625,13 +630,13 @@ static void UpdateFreqInput(KEY_Code_t key) {
     }
   }
 
-  uint32_t base = 100000; // 1MHz in BK units
+  uint32_t base = 100000;  // 1MHz in BK units
   for (int i = dotIndex - 1; i >= 0; --i) {
     tempFreq += (freqInputArr[i] - KEY_0) * base;
     base *= 10;
   }
 
-  base = 10000; // 0.1MHz in BK units
+  base = 10000;  // 0.1MHz in BK units
   if (dotIndex < freqInputIndex) {
     for (int i = dotIndex + 1; i < freqInputIndex; ++i) {
       tempFreq += (freqInputArr[i] - KEY_0) * base;
@@ -653,11 +658,9 @@ static void Blacklist() {
 }
 
 #ifdef ENABLE_SCAN_RANGES
-static bool IsBlacklisted(uint16_t idx)
-{
-  for(uint8_t i = 0; i < ARRAY_SIZE(blacklistFreqs); i++)
-    if(blacklistFreqs[i] == idx)
-      return true;
+static bool IsBlacklisted(uint16_t idx) {
+  for (uint8_t i = 0; i < ARRAY_SIZE(blacklistFreqs); i++)
+    if (blacklistFreqs[i] == idx) return true;
   return false;
 }
 #endif
@@ -735,7 +738,6 @@ static void DrawF(uint32_t f) {
 }
 
 static void DrawNums() {
-
   if (currentState == SPECTRUM) {
     sprintf(String, "%ux", GetStepsCount());
     GUI_DisplaySmallest(String, 0, 1, false, true);
@@ -762,8 +764,7 @@ static void DrawNums() {
 }
 
 static void DrawRssiTriggerLevel() {
-  if (settings.rssiTriggerLevel == RSSI_MAX_VALUE || monitorMode)
-    return;
+  if (settings.rssiTriggerLevel == RSSI_MAX_VALUE || monitorMode) return;
   uint8_t y = Rssi2Y(settings.rssiTriggerLevel);
   for (uint8_t x = 0; x < 128; x += 2) {
     PutPixel(x, y, true);
@@ -808,192 +809,192 @@ static void DrawArrow(uint8_t x) {
 
 static void OnKeyDown(uint8_t key) {
   switch (key) {
-  case KEY_3:
-    UpdateDBMax(true);
-    break;
-  case KEY_9:
-    UpdateDBMax(false);
-    break;
-  case KEY_1:
-    UpdateScanStep(true);
-    break;
-  case KEY_7:
-    UpdateScanStep(false);
-    break;
-  case KEY_2:
-    UpdateFreqChangeStep(true);
-    break;
-  case KEY_8:
-    UpdateFreqChangeStep(false);
-    break;
-  case KEY_UP:
-#ifdef ENABLE_SCAN_RANGES
-    if(!gScanRangeStart)
-#endif
-      UpdateCurrentFreq(true);
-    break;
-  case KEY_DOWN:
-#ifdef ENABLE_SCAN_RANGES
-    if(!gScanRangeStart)
-#endif
-      UpdateCurrentFreq(false);
-    break;
-  case KEY_SIDE1:
-    Blacklist();
-    break;
-  case KEY_STAR:
-    UpdateRssiTriggerLevel(true);
-    break;
-  case KEY_F:
-    UpdateRssiTriggerLevel(false);
-    break;
-  case KEY_5:
-#ifdef ENABLE_SCAN_RANGES
-    if(!gScanRangeStart)
-#endif
-      FreqInput();
-    break;
-  case KEY_0:
-    ToggleModulation();
-    break;
-  case KEY_6:
-    ToggleListeningBW();
-    break;
-  case KEY_4:
-#ifdef ENABLE_SCAN_RANGES
-    if(!gScanRangeStart)
-#endif
-      ToggleStepsCount();
-    break;
-  case KEY_SIDE2:
-    ToggleBacklight();
-    break;
-  case KEY_PTT:
-    SetState(STILL);
-    TuneToPeak();
-    break;
-  case KEY_MENU:
-    break;
-  case KEY_EXIT:
-    if (menuState) {
-      menuState = 0;
+    case KEY_3:
+      UpdateDBMax(true);
       break;
-    }
-    DeInitSpectrum();
-    break;
-  default:
-    break;
+    case KEY_9:
+      UpdateDBMax(false);
+      break;
+    case KEY_1:
+      UpdateScanStep(true);
+      break;
+    case KEY_7:
+      UpdateScanStep(false);
+      break;
+    case KEY_2:
+      UpdateFreqChangeStep(true);
+      break;
+    case KEY_8:
+      UpdateFreqChangeStep(false);
+      break;
+    case KEY_UP:
+#ifdef ENABLE_SCAN_RANGES
+      if (!gScanRangeStart)
+#endif
+        UpdateCurrentFreq(true);
+      break;
+    case KEY_DOWN:
+#ifdef ENABLE_SCAN_RANGES
+      if (!gScanRangeStart)
+#endif
+        UpdateCurrentFreq(false);
+      break;
+    case KEY_SIDE1:
+      Blacklist();
+      break;
+    case KEY_STAR:
+      UpdateRssiTriggerLevel(true);
+      break;
+    case KEY_F:
+      UpdateRssiTriggerLevel(false);
+      break;
+    case KEY_5:
+#ifdef ENABLE_SCAN_RANGES
+      if (!gScanRangeStart)
+#endif
+        FreqInput();
+      break;
+    case KEY_0:
+      ToggleModulation();
+      break;
+    case KEY_6:
+      ToggleListeningBW();
+      break;
+    case KEY_4:
+#ifdef ENABLE_SCAN_RANGES
+      if (!gScanRangeStart)
+#endif
+        ToggleStepsCount();
+      break;
+    case KEY_SIDE2:
+      ToggleBacklight();
+      break;
+    case KEY_PTT:
+      SetState(STILL);
+      TuneToPeak();
+      break;
+    case KEY_MENU:
+      break;
+    case KEY_EXIT:
+      if (menuState) {
+        menuState = 0;
+        break;
+      }
+      DeInitSpectrum();
+      break;
+    default:
+      break;
   }
 }
 
 static void OnKeyDownFreqInput(uint8_t key) {
   switch (key) {
-  case KEY_0:
-  case KEY_1:
-  case KEY_2:
-  case KEY_3:
-  case KEY_4:
-  case KEY_5:
-  case KEY_6:
-  case KEY_7:
-  case KEY_8:
-  case KEY_9:
-  case KEY_STAR:
-    UpdateFreqInput(key);
-    break;
-  case KEY_EXIT:
-    if (freqInputIndex == 0) {
+    case KEY_0:
+    case KEY_1:
+    case KEY_2:
+    case KEY_3:
+    case KEY_4:
+    case KEY_5:
+    case KEY_6:
+    case KEY_7:
+    case KEY_8:
+    case KEY_9:
+    case KEY_STAR:
+      UpdateFreqInput(key);
+      break;
+    case KEY_EXIT:
+      if (freqInputIndex == 0) {
+        SetState(previousState);
+        break;
+      }
+      UpdateFreqInput(key);
+      break;
+    case KEY_MENU:
+      if (tempFreq < F_MIN || tempFreq > F_MAX) {
+        break;
+      }
       SetState(previousState);
+      currentFreq = tempFreq;
+      if (currentState == SPECTRUM) {
+        ResetBlacklist();
+        RelaunchScan();
+      } else {
+        SetF(currentFreq);
+      }
       break;
-    }
-    UpdateFreqInput(key);
-    break;
-  case KEY_MENU:
-    if (tempFreq < F_MIN || tempFreq > F_MAX) {
+    default:
       break;
-    }
-    SetState(previousState);
-    currentFreq = tempFreq;
-    if (currentState == SPECTRUM) {
-      ResetBlacklist();
-      RelaunchScan();
-    } else {
-      SetF(currentFreq);
-    }
-    break;
-  default:
-    break;
   }
 }
 
 void OnKeyDownStill(KEY_Code_t key) {
   switch (key) {
-  case KEY_3:
-    UpdateDBMax(true);
-    break;
-  case KEY_9:
-    UpdateDBMax(false);
-    break;
-  case KEY_UP:
-    if (menuState) {
-      SetRegMenuValue(menuState, true);
+    case KEY_3:
+      UpdateDBMax(true);
       break;
-    }
-    UpdateCurrentFreqStill(true);
-    break;
-  case KEY_DOWN:
-    if (menuState) {
-      SetRegMenuValue(menuState, false);
+    case KEY_9:
+      UpdateDBMax(false);
       break;
-    }
-    UpdateCurrentFreqStill(false);
-    break;
-  case KEY_STAR:
-    UpdateRssiTriggerLevel(true);
-    break;
-  case KEY_F:
-    UpdateRssiTriggerLevel(false);
-    break;
-  case KEY_5:
-    FreqInput();
-    break;
-  case KEY_0:
-    ToggleModulation();
-    break;
-  case KEY_6:
-    ToggleListeningBW();
-    break;
-  case KEY_SIDE1:
-    monitorMode = !monitorMode;
-    break;
-  case KEY_SIDE2:
-    ToggleBacklight();
-    break;
-  case KEY_PTT:
-    // TODO: start transmit
-    /* BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
-    BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, true); */
-    break;
-  case KEY_MENU:
-    if (menuState == ARRAY_SIZE(registerSpecs) - 1) {
-      menuState = 1;
-    } else {
-      menuState++;
-    }
-    redrawScreen = true;
-    break;
-  case KEY_EXIT:
-    if (!menuState) {
-      SetState(SPECTRUM);
-      lockAGC = false;
-      monitorMode = false;
-      RelaunchScan();
+    case KEY_UP:
+      if (menuState) {
+        SetRegMenuValue(menuState, true);
+        break;
+      }
+      UpdateCurrentFreqStill(true);
       break;
-    }
-    menuState = 0;
-    break;
-  default:
-    break;
+    case KEY_DOWN:
+      if (menuState) {
+        SetRegMenuValue(menuState, false);
+        break;
+      }
+      UpdateCurrentFreqStill(false);
+      break;
+    case KEY_STAR:
+      UpdateRssiTriggerLevel(true);
+      break;
+    case KEY_F:
+      UpdateRssiTriggerLevel(false);
+      break;
+    case KEY_5:
+      FreqInput();
+      break;
+    case KEY_0:
+      ToggleModulation();
+      break;
+    case KEY_6:
+      ToggleListeningBW();
+      break;
+    case KEY_SIDE1:
+      monitorMode = !monitorMode;
+      break;
+    case KEY_SIDE2:
+      ToggleBacklight();
+      break;
+    case KEY_PTT:
+      // TODO: start transmit
+      /* BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
+      BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, true); */
+      break;
+    case KEY_MENU:
+      if (menuState == ARRAY_SIZE(registerSpecs) - 1) {
+        menuState = 1;
+      } else {
+        menuState++;
+      }
+      redrawScreen = true;
+      break;
+    case KEY_EXIT:
+      if (!menuState) {
+        SetState(SPECTRUM);
+        lockAGC = false;
+        monitorMode = false;
+        RelaunchScan();
+        break;
+      }
+      menuState = 0;
+      break;
+    default:
+      break;
   }
 }
 
@@ -1021,11 +1022,11 @@ static void RenderStill() {
 
   memset(&gFrameBuffer[2][METER_PAD_LEFT], 0b00010000, 121);
 
-  for (int i = 0; i < 121; i+=5) {
+  for (int i = 0; i < 121; i += 5) {
     gFrameBuffer[2][i + METER_PAD_LEFT] = 0b00110000;
   }
 
-  for (int i = 0; i < 121; i+=10) {
+  for (int i = 0; i < 121; i += 10) {
     gFrameBuffer[2][i + METER_PAD_LEFT] = 0b01110000;
   }
 
@@ -1078,15 +1079,15 @@ static void Render() {
   UI_DisplayClear();
 
   switch (currentState) {
-  case SPECTRUM:
-    RenderSpectrum();
-    break;
-  case FREQ_INPUT:
-    RenderFreqInput();
-    break;
-  case STILL:
-    RenderStill();
-    break;
+    case SPECTRUM:
+      RenderSpectrum();
+      break;
+    case FREQ_INPUT:
+      RenderFreqInput();
+      break;
+    case STILL:
+      RenderStill();
+      break;
   }
 
   ST7565_BlitFullScreen();
@@ -1108,15 +1109,15 @@ bool HandleUserInput() {
 
   if (kbd.counter == 3 || kbd.counter == 16) {
     switch (currentState) {
-    case SPECTRUM:
-      OnKeyDown(kbd.current);
-      break;
-    case FREQ_INPUT:
-      OnKeyDownFreqInput(kbd.current);
-      break;
-    case STILL:
-      OnKeyDownStill(kbd.current);
-      break;
+      case SPECTRUM:
+        OnKeyDown(kbd.current);
+        break;
+      case FREQ_INPUT:
+        OnKeyDownFreqInput(kbd.current);
+        break;
+      case STILL:
+        OnKeyDownStill(kbd.current);
+        break;
     }
   }
 
@@ -1124,11 +1125,11 @@ bool HandleUserInput() {
 }
 
 static void Scan() {
-  if (rssiHistory[scanInfo.i] != RSSI_MAX_VALUE
+  if (scanInfo.i == 0 || (rssiHistory[scanInfo.i] != RSSI_MAX_VALUE
 #ifdef ENABLE_SCAN_RANGES
-  && !IsBlacklisted(scanInfo.i)
+                          && !IsBlacklisted(scanInfo.i)
 #endif
-  ) {
+                              )) {
     SetF(scanInfo.f);
     Measure();
     UpdateScanInfo();
@@ -1149,9 +1150,10 @@ static void UpdateScan() {
     return;
   }
 
-  if(scanInfo.measurementsCount < 128)
+  if (scanInfo.measurementsCount < 128)
     memset(&rssiHistory[scanInfo.measurementsCount], 0,
-      sizeof(rssiHistory) - scanInfo.measurementsCount*sizeof(rssiHistory[0]));
+           sizeof(rssiHistory) -
+               scanInfo.measurementsCount * sizeof(rssiHistory[0]));
 
   redrawScreen = true;
   preventKeypress = false;
@@ -1212,8 +1214,8 @@ static void Tick() {
 #ifdef ENABLE_AM_FIX
   if (gNextTimeslice) {
     gNextTimeslice = false;
-    if(settings.modulationType == MODULATION_AM && !lockAGC) {
-      AM_fix_10ms(vfo); //allow AM_Fix to apply its AGC action
+    if (settings.modulationType == MODULATION_AM && !lockAGC) {
+      AM_fix_10ms(vfo);  // allow AM_Fix to apply its AGC action
     }
   }
 #endif
@@ -1225,7 +1227,7 @@ static void Tick() {
     // if a lot of steps then it takes long time
     // we don't want to wait for whole scan
     // listening has it's own timer
-    if(GetStepsCount()>128 && !isListening) {
+    if (GetStepsCount() > 128 && !isListening) {
       UpdatePeakInfo();
       if (IsPeakOverLevel()) {
         ToggleRX(true);
@@ -1270,30 +1272,29 @@ void APP_RunSpectrum() {
   vfo = gEeprom.TX_VFO;
   // set the current frequency in the middle of the display
 #ifdef ENABLE_SCAN_RANGES
-  if(gScanRangeStart) {
+  if (gScanRangeStart) {
     currentFreq = initialFreq = gScanRangeStart;
-    for(uint8_t i = 0; i < ARRAY_SIZE(scanStepValues); i++) {
-      if(scanStepValues[i] >= gTxVfo->StepFrequency) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(scanStepValues); i++) {
+      if (scanStepValues[i] >= gTxVfo->StepFrequency) {
         settings.scanStepIndex = i;
         break;
       }
     }
-    settings.stepsCount = STEPS_128;
-  }
-  else
+
+    SetDynamicStepsCount();
+  } else
 #endif
-    currentFreq = initialFreq = gTxVfo->pRX->Frequency -
-                                ((GetStepsCount() / 2) * GetScanStep());
+    currentFreq = initialFreq =
+        gTxVfo->pRX->Frequency - ((GetStepsCount() / 2) * GetScanStep());
 
   BackupRegisters();
 
-  isListening = true; // to turn off RX later
+  isListening = true;  // to turn off RX later
   redrawStatus = true;
   redrawScreen = true;
   newScanStart = true;
 
-
-  ToggleRX(true), ToggleRX(false); // hack to prevent noise when squelch off
+  ToggleRX(true), ToggleRX(false);  // hack to prevent noise when squelch off
   RADIO_SetModulation(settings.modulationType = gTxVfo->Modulation);
 
   BK4819_SetFilterBandwidth(settings.listenBw = BK4819_FILTER_BW_WIDE, false);
