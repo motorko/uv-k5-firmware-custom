@@ -3,9 +3,6 @@
 This repository is a merge of [OneOfEleven custom firmware](https://github.com/OneOfEleven/uv-k5-firmware-custom) with [fagci spectrum analizer](https://github.com/fagci/uv-k5-firmware-fagci-mod/tree/refactor) plus my few changes.<br>
 All is a cloned and customized version of DualTachyon's open firmware found [here](https://github.com/DualTachyon/uv-k5-firmware) ... a cool achievement !
 
-> [!TIP]
-> There is a work done by others on forks of this repository. I encourage you to take a look at those too. [SEE HERE](https://github.com/egzumer/uv-k5-firmware-custom/discussions/485)
-
 > [!WARNING]  
 > Use this firmware at your own risk (entirely). There is absolutely no guarantee that it will work in any way shape or form on your radio(s), it may even brick your radio(s), in which case, you'd need to buy another radio.
 Anyway, have fun.
@@ -145,7 +142,7 @@ You can get it from: https://releases.llvm.org/download.html
 
 This is the least demanding option as you don't have to install enything on your computer. All you need is Github account.
 
-1. Go to https://github.com/egzumer/uv-k5-firmware-custom
+1. Go to https://github.com/motorko/uv-k5-firmware-custom
 1. Click green `Code` button
 1. Change tab from `Local` to `Codespace`
 1. Click green `Create codespace on main` button
@@ -157,7 +154,7 @@ This is the least demanding option as you don't have to install enything on your
 1. Run `./compile-with-docker.sh` in terminal window
 1. Open folder `compiled-firmware`
 1. Right click `firmware.packed.bin`
-1. Click `Download`, now you should have a firmware on your computer that you can proceed to flash on your radio. You can use [online flasher](https://egzumer.github.io/uvtools)
+1. Click `Download`, now you should have a firmware on your computer that you can proceed to flash on your radio. You can use [online flasher](https://www.radioamador.pt/uvtools/index.html)
 
 <img src="images/codespace2.png" width=700 />
 
@@ -177,7 +174,7 @@ If you have docker installed you can use [compile-with-docker.bat](./compile-wit
     pip install --user --upgrade pip
     pip install crcmod
     mkdir c:\projects & cd /D c:/projects
-    git clone https://github.com/egzumer/uv-k5-firmware-custom.git
+    git clone https://github.com/motorko/uv-k5-firmware-custom.git
     ```
 3. From now on you can build the firmware by going to `c:\projects\uv-k5-firmware-custom` and running `win_make.bat` or by running a command line:
     ```
