@@ -286,6 +286,17 @@ uint16_t GetStepsCount()
   return 128 >> settings.stepsCount;
 }
 
+#if defined(ENABLE_SCAN_RANGES) && defined(ENABLE_SCAN_RANGES_ADAPTIVE_STEPS)
+void AdjustStepsCount() {
+  uint16_t steps = GetStepsCount();
+
+  settings.stepsCount = (steps >= 128)  ? STEPS_128
+                        : (steps >= 64) ? STEPS_64
+                        : (steps >= 32) ? STEPS_32
+                                        : STEPS_16;
+}
+#endif
+
 uint32_t GetBW() { return GetStepsCount() * GetScanStep(); }
 uint32_t GetFStart() {
   return IsCenterMode() ? currentFreq - (GetBW() >> 1) : currentFreq;
@@ -430,6 +441,16 @@ static void UpdatePeakInfo() {
 static void SetRssiHistory(uint16_t idx, uint16_t rssi)
 {
 #ifdef ENABLE_SCAN_RANGES
+#ifdef ENABLE_SCAN_RANGES_ADAPTIVE_STEPS
+  uint16_t steps = 128 >> settings.stepsCount;
+  uint16_t bins = scanInfo.measurementsCount;
+
+  if (bins > steps) {
+    uint8_t i = (uint32_t)idx * steps / bins;
+    if (rssiHistory[i] < rssi || isListening) rssiHistory[i] = rssi;
+    return;
+  }
+#else
   if(scanInfo.measurementsCount > 128) {
     uint8_t i = (uint32_t)ARRAY_SIZE(rssiHistory) * 1000 / scanInfo.measurementsCount * idx / 1000;
     if(rssiHistory[i] < rssi || isListening)
@@ -437,6 +458,7 @@ static void SetRssiHistory(uint16_t idx, uint16_t rssi)
     rssiHistory[(i+1)%128] = 0;
     return;
   }
+#endif
 #endif
   rssiHistory[idx] = rssi;
 }
@@ -494,6 +516,9 @@ static void UpdateScanStep(bool inc) {
   }
 
   settings.frequencyChangeStep = GetBW() >> 1;
+#if defined(ENABLE_SCAN_RANGES) && defined(ENABLE_SCAN_RANGES_ADAPTIVE_STEPS)
+  AdjustStepsCount();
+#endif
   RelaunchScan();
   ResetBlacklist();
   redrawScreen = true;
@@ -1277,7 +1302,11 @@ void APP_RunSpectrum() {
         break;
       }
     }
+#ifdef ENABLE_SCAN_RANGES_ADAPTIVE_STEPS
+    AdjustStepsCount();
+#else
     settings.stepsCount = STEPS_128;
+#endif
   }
   else
 #endif
