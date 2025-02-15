@@ -37,7 +37,7 @@ Anyway, have fun.
    * more frequency steps
    * squelch more sensitive
 * fagci spectrum analyzer (**F+5** to turn on)
-* some other mods introduced by me:
+* mods introduced by egzumer:
    * SSB demodulation (adopted from fagci)
    * backlight dimming
    * battery voltage calibration from menu
@@ -50,6 +50,10 @@ Anyway, have fun.
    * reordered and renamed menu entries
    * LCD interference crash fix
    * many others...
+* other mods introduced by me:
+   * fixed a bug in the spectrum analyzer logic that caused the first column to remain blank.
+   * resolved an issue with incomplete spectrum display in ScnRng mode.
+   * improved VFO frequency input so that incomplete entries are automatically completed to preserve the intended frequency.
 
  ## Manual
 
@@ -117,6 +121,8 @@ You'll find the options at the top of "Makefile" ('0' = disable, '1' = enable) .
 | ENABLE_BYP_RAW_DEMODULATORS | additional BYP (bypass?) and RAW demodulation options, proved not to be very useful, but it is there if you want to experiment |
 | ENABLE_BLMIN_TMP_OFF | additional function for configurable buttons that toggles `BLMin` on and off wihout saving it to the EEPROM |
 | ENABLE_SCAN_RANGES | scan range mode for frequency scanning, see wiki for instructions (radio operation -> frequency scanning) |
+| ENABLE_VFO_AUTO_COMPLETE | Automatically completes partial frequency entries in VFO. |
+| ENABLE_SCAN_RANGES_ADAPTIVE_STEPS | Dynamically adjusts the steps count in SCAN_RANGES mode. |
 |🧰 **DEBUGGING** ||
 | ENABLE_AM_FIX_SHOW_DATA| displays settings used by  AM-fix when AM transmission is received |
 | ENABLE_AGC_SHOW_DATA | displays AGC settings |
