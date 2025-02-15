@@ -446,10 +446,17 @@ static void SetRssiHistory(uint16_t idx, uint16_t rssi)
   uint16_t bins = scanInfo.measurementsCount;
 
   if (bins > steps) {
-    uint8_t i = (uint32_t)idx * steps / bins;
+    uint8_t i;
+    if (steps == 128) {
+      i = ((uint32_t)ARRAY_SIZE(rssiHistory) * 1000 / bins * idx) / 1000;
+      rssiHistory[(i+1) % steps] = 0;
+    } else {
+      rssiHistory[scanInfo.i] = 0;
+      i = ((uint32_t)idx * steps) / bins;
+    }
+
     if (rssiHistory[i] < rssi || isListening)
       rssiHistory[i] = rssi;
-    rssiHistory[(i+1)%steps] = 0;
     return;
   }
 #else
