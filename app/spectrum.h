@@ -120,7 +120,6 @@ typedef struct SpectrumSettings {
   uint32_t frequencyChangeStep;  
   StepsCount stepsCount;
   ScanStep scanStepIndex;
-  uint16_t scanDelay;
   uint16_t rssiTriggerLevel;
   BK4819_FilterBandwidth_t bw;
   BK4819_FilterBandwidth_t listenBw;

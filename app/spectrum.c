@@ -69,7 +69,6 @@ const uint8_t modTypeReg47Values[] = {1, 7, 5};
 SpectrumSettings settings = {.stepsCount = STEPS_64,
                              .scanStepIndex = S_STEP_25_0kHz,
                              .frequencyChangeStep = 80000,
-                             .scanDelay = 3200,
                              .rssiTriggerLevel = 150,
                              .backlightState = true,
                              .bw = BK4819_FILTER_BW_WIDE,
