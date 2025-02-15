@@ -447,7 +447,9 @@ static void SetRssiHistory(uint16_t idx, uint16_t rssi)
 
   if (bins > steps) {
     uint8_t i = (uint32_t)idx * steps / bins;
-    if (rssiHistory[i] < rssi || isListening) rssiHistory[i] = rssi;
+    if (rssiHistory[i] < rssi || isListening)
+      rssiHistory[i] = rssi;
+    rssiHistory[(i+1)%steps] = 0;
     return;
   }
 #else
