@@ -20,6 +20,9 @@
 #include "driver/keyboard.h"
 
 void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+  void MAIN_ApplyEnteredFreq(void);
+#endif
 
 #endif
 

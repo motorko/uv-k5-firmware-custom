@@ -1246,6 +1246,9 @@ void cancelUserInputModes(void)
 
 	if (gWasFKeyPressed || gKeyInputCountdown > 0 || gInputBoxIndex > 0)
 	{
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+		MAIN_ApplyEnteredFreq();
+#endif
 		gWasFKeyPressed     = false;
 		gInputBoxIndex      = 0;
 		gKeyInputCountdown  = 0;

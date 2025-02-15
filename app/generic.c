@@ -25,6 +25,9 @@
 #endif
 
 #include "app/generic.h"
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+	#include "app/main.h"
+#endif
 #include "app/menu.h"
 #include "app/scanner.h"
 #include "audio.h"
@@ -98,6 +101,9 @@ void GENERIC_Key_F(bool bKeyPressed, bool bKeyHeld)
 
 void GENERIC_Key_PTT(bool bKeyPressed)
 {
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+	MAIN_ApplyEnteredFreq();
+#endif
 	gInputBoxIndex = 0;
 
 	if (!bKeyPressed || SerialConfigInProgress())

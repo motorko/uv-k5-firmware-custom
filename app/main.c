@@ -332,6 +332,18 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gAnotherVoiceID = (VOICE_ID_t)Key;
 #endif
 			bool isGigaF = gTxVfo->pRX->Frequency >= _1GHz_in_KHz;
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+			uint8_t totalDigits = 6 + isGigaF;
+
+			gKeyInputCountdown = (gInputBoxIndex == totalDigits)
+															? (key_input_timeout_500ms / 16)
+															: (key_input_timeout_500ms / 3);
+
+			if (gInputBoxIndex < totalDigits) {
+				return;
+			}
+			MAIN_ApplyEnteredFreq();
+#else
 			if (gInputBoxIndex < 6 + isGigaF) {
 				return;
 			}
@@ -374,6 +386,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gTxVfo->freq_config_RX.Frequency = Frequency;
 
 			gRequestSaveChannel = 1;
+#endif
 			return;
 
 		}
@@ -506,6 +519,9 @@ static void MAIN_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 	}
 
 	if (!bKeyPressed && !gDTMF_InputMode) { // menu key released
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+		MAIN_ApplyEnteredFreq();
+#endif
 		const bool bFlag = !gInputBoxIndex;
 		gInputBoxIndex   = 0;
 
@@ -741,3 +757,68 @@ void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			break;
 	}
 }
+
+#ifdef ENABLE_VFO_AUTO_COMPLETE
+void MAIN_ApplyEnteredFreq() {
+  if (gInputBoxIndex == 0) {
+    // do nothing
+    return;
+  }
+
+	bool isGigaF = gTxVfo->pRX->Frequency >= _1GHz_in_KHz;
+	uint8_t totalDigits = 6 + isGigaF;
+
+  const char *inputStr = INPUTBOX_GetAscii();
+  uint8_t inputLength = gInputBoxIndex;
+
+  // convert to int
+  uint32_t inputFreq = StrToUL(inputStr);
+
+  // how many zero to add
+  uint8_t zerosToAdd = totalDigits - inputLength;
+
+  // add missing zero
+  for (uint8_t i = 0; i < zerosToAdd; i++) {
+    inputFreq *= 10;
+  }
+
+  uint32_t Frequency = inputFreq * 100;
+
+  // clamp the frequency entered to some valid value
+  if (Frequency < frequencyBandTable[0].lower) {
+    Frequency = frequencyBandTable[0].lower;
+  } else if (Frequency >= BX4819_band1.upper &&
+             Frequency < BX4819_band2.lower) {
+    const uint32_t center = (BX4819_band1.upper + BX4819_band2.lower) / 2;
+    Frequency = (Frequency < center) ? BX4819_band1.upper : BX4819_band2.lower;
+  } else if (Frequency > frequencyBandTable[BAND_N_ELEM - 1].upper) {
+    Frequency = frequencyBandTable[BAND_N_ELEM - 1].upper;
+  }
+
+  const FREQUENCY_Band_t band = FREQUENCY_GetBand(Frequency);
+  const uint8_t Vfo = gEeprom.TX_VFO;
+  if (gTxVfo->Band != band) {
+    gTxVfo->Band = band;
+    gEeprom.ScreenChannel[Vfo] = band + FREQ_CHANNEL_FIRST;
+    gEeprom.FreqChannel[Vfo] = band + FREQ_CHANNEL_FIRST;
+
+    SETTINGS_SaveVfoIndices();
+
+    RADIO_ConfigureChannel(Vfo, VFO_CONFIGURE_RELOAD);
+  }
+
+  Frequency = FREQUENCY_RoundToStep(Frequency, gTxVfo->StepFrequency);
+
+  if (Frequency >= BX4819_band1.upper &&
+      Frequency < BX4819_band2.lower) {  // clamp the frequency to the limit
+    const uint32_t center = (BX4819_band1.upper + BX4819_band2.lower) / 2;
+    Frequency = (Frequency < center)
+                    ? BX4819_band1.upper - gTxVfo->StepFrequency
+                    : BX4819_band2.lower;
+  }
+
+  gTxVfo->freq_config_RX.Frequency = Frequency;
+
+  gRequestSaveChannel = 1;
+}
+#endif
