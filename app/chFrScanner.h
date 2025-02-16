@@ -9,6 +9,9 @@
 extern int8_t            gScanStateDir;
 extern bool              gScanKeepResult;
 extern bool              gScanPauseMode;
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+extern uint8_t           gInitialCROSS_BAND_RX_TX;
+#endif
 
 #ifdef ENABLE_SCAN_RANGES
 extern uint32_t          gScanRangeStart;

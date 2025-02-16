@@ -8,6 +8,9 @@
 int8_t            gScanStateDir;
 bool              gScanKeepResult;
 bool              gScanPauseMode;
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+uint8_t           gInitialCROSS_BAND_RX_TX;
+#endif
 
 #ifdef ENABLE_SCAN_RANGES
 uint32_t          gScanRangeStart;
@@ -24,7 +27,9 @@ typedef enum {
 
 scan_next_chan_t	currentScanList;
 uint32_t            initialFrqOrChan;
+#ifndef ENABLE_SINGLE_VFO_DISPLAY_MODE
 uint8_t           	initialCROSS_BAND_RX_TX;
+#endif
 uint32_t            lastFoundFrqOrChan;
 
 static void NextFreqChannel(void);
@@ -33,7 +38,11 @@ static void NextMemChannel(void);
 void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_direction)
 {
 	if (storeBackupSettings) {
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+		gInitialCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
+#else
 		initialCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
+#endif
 		gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
 		gScanKeepResult = false;
 	}
@@ -122,10 +131,17 @@ void CHFRSCANNER_Found(void)
 
 void CHFRSCANNER_Stop(void)
 {
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+	if(gInitialCROSS_BAND_RX_TX != CROSS_BAND_OFF) {
+		gEeprom.CROSS_BAND_RX_TX = gInitialCROSS_BAND_RX_TX;
+		gInitialCROSS_BAND_RX_TX = CROSS_BAND_OFF;
+	}
+#else
 	if(initialCROSS_BAND_RX_TX != CROSS_BAND_OFF) {
 		gEeprom.CROSS_BAND_RX_TX = initialCROSS_BAND_RX_TX;
 		initialCROSS_BAND_RX_TX = CROSS_BAND_OFF;
 	}
+#endif
 	
 	gScanStateDir = SCAN_OFF;
 

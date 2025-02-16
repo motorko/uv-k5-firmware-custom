@@ -117,6 +117,14 @@ void UI_DisplayStatus()
 		else if(dw == 2) { // XB - crossband
 			memcpy(line + x + 2, BITMAP_XB, sizeof(BITMAP_XB));
 		}
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+		else {
+			if (gEeprom.TX_VFO == 0)
+				memcpy(line + x + 2, BITMAP_VFOA, sizeof(BITMAP_VFOA));
+			else
+				memcpy(line + x + 2, BITMAP_VFOB, sizeof(BITMAP_VFOB));
+		}
+#endif
 	}
 	x += sizeof(BITMAP_TDR1) + 1;
 

@@ -26,6 +26,11 @@ extern const uint8_t BITMAP_XB[12];
 extern const uint8_t BITMAP_TDR1[16];
 extern const uint8_t BITMAP_TDR2[10];
 
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+	extern const uint8_t BITMAP_VFOA[23];
+	extern const uint8_t BITMAP_VFOB[23];
+#endif
+
 #ifdef ENABLE_VOICE
 	extern const uint8_t BITMAP_VoicePrompt[9];
 #endif

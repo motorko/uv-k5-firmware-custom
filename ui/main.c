@@ -61,6 +61,16 @@ const char *VfoStateStr[] = {
 
 // ***************************************************************************
 
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+static bool isMainOnly() {
+#ifdef ENABLE_NOAA
+	return (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF) && (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) && (gInitialCROSS_BAND_RX_TX == CROSS_BAND_OFF) && !gIsNoaaMode;
+#else
+	return (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF) && (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) && (gInitialCROSS_BAND_RX_TX == CROSS_BAND_OFF);
+#endif
+}
+#endif
+
 static void DrawSmallAntennaAndBars(uint8_t *p, unsigned int level)
 {
 	if(level>6)
@@ -166,8 +176,11 @@ void DisplayRSSIBar(const bool now)
 
 	const unsigned int txt_width    = 7 * 8;                 // 8 text chars
 	const unsigned int bar_x        = 2 + txt_width + 4;     // X coord of bar graph
-
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+	const unsigned int line         = isMainOnly() ? 4 : 3;
+#else
 	const unsigned int line         = 3;
+#endif
 	uint8_t           *p_line        = gFrameBuffer[line];
 	char               str[16];
 
@@ -329,9 +342,20 @@ void UI_DisplayMain(void)
 
 	for (unsigned int vfo_num = 0; vfo_num < 2; vfo_num++)
 	{
+
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+		const bool isMainOnlyAndMainVFO = (isMainOnly() && activeTxVFO == vfo_num);
+		const bool isMainOnlyAndNotMainVFO = (isMainOnly() && activeTxVFO != vfo_num);
+		const unsigned int line0 = isMainOnly() ? 1 : 0;
+		const unsigned int line1 = isMainOnly() ? 5 : 4;
+		const unsigned int line       = isMainOnlyAndMainVFO 			? line0
+																		: isMainOnlyAndNotMainVFO ? line1
+																		: (vfo_num == 0) ? line0 : line1;
+#else
 		const unsigned int line0 = 0;  // text screen line
 		const unsigned int line1 = 4;
 		const unsigned int line       = (vfo_num == 0) ? line0 : line1;
+#endif
 		const bool         isMainVFO  = (vfo_num == gEeprom.TX_VFO);
 		uint8_t           *p_line0    = gFrameBuffer[line + 0];
 		uint8_t           *p_line1    = gFrameBuffer[line + 1];
@@ -369,8 +393,15 @@ void UI_DisplayMain(void)
 						pPrintStr = gDTMF_String;
 					}
 				}
-
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+				if (isMainOnlyAndNotMainVFO) {
+					UI_PrintStringSmallNormal(pPrintStr, 2, 0, line1 + 1);
+				} else {
+					UI_PrintString(pPrintStr, 2, 0, 2 + (vfo_num * 3), 8);
+				}
+#else
 				UI_PrintString(pPrintStr, 2, 0, 2 + (vfo_num * 3), 8);
+#endif
 
 				pPrintStr = "";
 				if (!gDTMF_InputMode) {
@@ -389,8 +420,15 @@ void UI_DisplayMain(void)
 					sprintf(String, ">%s", gDTMF_InputBox);
 					pPrintStr = String;
 				}
-
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+				if (isMainOnlyAndNotMainVFO) {
+					UI_PrintStringSmallNormal(pPrintStr, 2, 0, line1);
+				} else {
+					UI_PrintString(pPrintStr, 2, 0, 0 + (vfo_num * 3), 8);
+				}
+#else
 				UI_PrintString(pPrintStr, 2, 0, 0 + (vfo_num * 3), 8);
+#endif
 
 				center_line = CENTER_LINE_IN_USE;
 				continue;
@@ -402,11 +440,23 @@ void UI_DisplayMain(void)
 		}
 		else // active TX VFO
 		{	// highlight the selected/used VFO with a marker
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+			if (!isMainOnly()) {
+				if (isMainVFO)
+					memcpy(p_line0 + 0, BITMAP_VFO_Default, sizeof(BITMAP_VFO_Default));
+				else
+					memcpy(p_line0 + 0, BITMAP_VFO_NotDefault, sizeof(BITMAP_VFO_NotDefault));
+			}
+#else
 			if (isMainVFO)
 				memcpy(p_line0 + 0, BITMAP_VFO_Default, sizeof(BITMAP_VFO_Default));
 			else
 				memcpy(p_line0 + 0, BITMAP_VFO_NotDefault, sizeof(BITMAP_VFO_NotDefault));
+#endif
 		}
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+		if (isMainOnlyAndNotMainVFO) continue;
+#endif
 
 		if (gCurrentFunction == FUNCTION_TRANSMIT)
 		{	// transmitting
@@ -420,7 +470,12 @@ void UI_DisplayMain(void)
 				if (activeTxVFO == vfo_num)
 				{	// show the TX symbol
 					mode = VFO_MODE_TX;
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+					uint8_t start = isMainOnly() ? 2 : 14;
+					UI_PrintStringSmallBold("TX", start, 0, line);
+#else
 					UI_PrintStringSmallBold("TX", 14, 0, line);
+#endif
 				}
 			}
 		}
@@ -428,7 +483,12 @@ void UI_DisplayMain(void)
 		{	// receiving .. show the RX symbol
 			mode = VFO_MODE_RX;
 			if (FUNCTION_IsRx() && gEeprom.RX_VFO == vfo_num) {
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+				uint8_t start = isMainOnly() ? 2 : 14;
+				UI_PrintStringSmallBold("RX", start, 0, line);
+#else
 				UI_PrintStringSmallBold("RX", 14, 0, line);
+#endif
 			}
 		}
 
@@ -632,8 +692,16 @@ void UI_DisplayMain(void)
 						Level = gVFO_RSSI_bar_level[vfo_num];
 				#endif
 			}
-			if(Level)
+			if(Level) {
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+				if (isMainOnlyAndMainVFO)
+					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH + 3, Level);
+				else
+					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH, Level);
+#else
 				DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH, Level);
+#endif
+			}
 		}
 
 		// ************
