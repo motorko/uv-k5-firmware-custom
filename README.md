@@ -55,6 +55,7 @@ Anyway, have fun.
    * resolved an issue with incomplete spectrum display in ScnRng mode.
    * improved VFO frequency input so that incomplete entries are automatically completed to preserve the intended frequency.
    * added single VFO display mode.
+   * added basic flashlight mode (on/off only).
 
  ## Manual
 
@@ -125,6 +126,7 @@ You'll find the options at the top of "Makefile" ('0' = disable, '1' = enable) .
 | ENABLE_VFO_AUTO_COMPLETE | Automatically completes partial frequency entries in VFO. |
 | ENABLE_SCAN_RANGES_ADAPTIVE_STEPS | Dynamically adjusts the steps count in SCAN_RANGES mode. |
 | ENABLE_SINGLE_VFO_DISPLAY_MODE | Displays only the main VFO (single VFO mode) when selected. |
+| ENABLE_FLASHLIGHT_ONOFF_ONLY  | Basic flashlight mode (on/off only) |
 |🧰 **DEBUGGING** ||
 | ENABLE_AM_FIX_SHOW_DATA| displays settings used by  AM-fix when AM transmission is received |
 | ENABLE_AGC_SHOW_DATA | displays AGC settings |
