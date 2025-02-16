@@ -54,6 +54,7 @@ Anyway, have fun.
    * fixed a bug in the spectrum analyzer logic that caused the first column to remain blank.
    * resolved an issue with incomplete spectrum display in ScnRng mode.
    * improved VFO frequency input so that incomplete entries are automatically completed to preserve the intended frequency.
+   * added single VFO display mode.
 
  ## Manual
 
@@ -123,6 +124,7 @@ You'll find the options at the top of "Makefile" ('0' = disable, '1' = enable) .
 | ENABLE_SCAN_RANGES | scan range mode for frequency scanning, see wiki for instructions (radio operation -> frequency scanning) |
 | ENABLE_VFO_AUTO_COMPLETE | Automatically completes partial frequency entries in VFO. |
 | ENABLE_SCAN_RANGES_ADAPTIVE_STEPS | Dynamically adjusts the steps count in SCAN_RANGES mode. |
+| ENABLE_SINGLE_VFO_DISPLAY_MODE | Displays only the main VFO (single VFO mode) when selected. |
 |🧰 **DEBUGGING** ||
 | ENABLE_AM_FIX_SHOW_DATA| displays settings used by  AM-fix when AM transmission is received |
 | ENABLE_AGC_SHOW_DATA | displays AGC settings |
