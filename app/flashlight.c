@@ -2,12 +2,38 @@
 
 #include "driver/gpio.h"
 #include "bsp/dp32g030/gpio.h"
-
 #include "flashlight.h"
 
-enum FlashlightMode_t  gFlashLightState;
+#ifdef ENABLE_FLASHLIGHT_ONOFF_ONLY
 
-void FlashlightTimeSlice()
+enum FlashlightMode_t gFlashLightState = FLASHLIGHT_OFF;
+
+void FlashlightTimeSlice(void)
+{
+	if (gFlashLightState == FLASHLIGHT_ON) {
+		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+	} else {
+		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+	}
+}
+
+void ACTION_FlashLight(void)
+{
+	if (gFlashLightState == FLASHLIGHT_OFF) {
+		gFlashLightState = FLASHLIGHT_ON;
+		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+	} else {
+		gFlashLightState = FLASHLIGHT_OFF;
+		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+	}
+}
+
+#else
+
+enum FlashlightMode_t gFlashLightState = FLASHLIGHT_OFF;
+volatile uint16_t gFlashLightBlinkCounter = 0;
+
+void FlashlightTimeSlice(void)
 {
 	if (gFlashLightState == FLASHLIGHT_BLINK && (gFlashLightBlinkCounter & 15u) == 0) {
 		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
@@ -62,5 +88,7 @@ void ACTION_FlashLight(void)
 			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
 	}
 }
+
+#endif
 
 #endif
