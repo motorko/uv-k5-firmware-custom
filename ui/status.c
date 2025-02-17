@@ -117,8 +117,12 @@ void UI_DisplayStatus()
 		else if(dw == 2) { // XB - crossband
 			memcpy(line + x + 2, BITMAP_XB, sizeof(BITMAP_XB));
 		}
-#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-		else {
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE 
+		else if (gInitialCROSS_BAND_RX_TX == CROSS_BAND_OFF
+#ifdef ENABLE_NOAA
+			&& !gIsNoaaMode
+#endif
+		) {
 			if (gEeprom.TX_VFO == 0)
 				memcpy(line + x + 2, BITMAP_VFOA, sizeof(BITMAP_VFOA));
 			else
