@@ -135,7 +135,11 @@ void UI_DisplayAudioBar(void)
 		if(gLowBattery && !gLowBatteryConfirmed)
 			return;
 
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+		const unsigned int line      = isMainOnly() ? 4 : 3;
+#else
 		const unsigned int line      = 3;
+#endif
 
 		if (gCurrentFunction != FUNCTION_TRANSMIT ||
 			gScreenToDisplay != DISPLAY_MAIN
