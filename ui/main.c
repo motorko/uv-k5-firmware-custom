@@ -399,7 +399,7 @@ void UI_DisplayMain(void)
 				}
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
 				if (isMainOnlyAndNotMainVFO) {
-					UI_PrintStringSmallNormal(pPrintStr, 2, 0, line1 + 1);
+					UI_PrintStringSmallNormal(pPrintStr, 0, 0, line1 + 1);
 				} else {
 					UI_PrintString(pPrintStr, 2, 0, 2 + (vfo_num * 3), 8);
 				}
@@ -426,7 +426,7 @@ void UI_DisplayMain(void)
 				}
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
 				if (isMainOnlyAndNotMainVFO) {
-					UI_PrintStringSmallNormal(pPrintStr, 2, 0, line1);
+					UI_PrintStringSmallNormal(pPrintStr, 0, 0, line1);
 				} else {
 					UI_PrintString(pPrintStr, 2, 0, 0 + (vfo_num * 3), 8);
 				}
@@ -475,7 +475,7 @@ void UI_DisplayMain(void)
 				{	// show the TX symbol
 					mode = VFO_MODE_TX;
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-					uint8_t start = isMainOnly() ? 2 : 14;
+					uint8_t start = isMainOnly() ? 0 : 14;
 					UI_PrintStringSmallBold("TX", start, 0, line);
 #else
 					UI_PrintStringSmallBold("TX", 14, 0, line);
@@ -488,7 +488,7 @@ void UI_DisplayMain(void)
 			mode = VFO_MODE_RX;
 			if (FUNCTION_IsRx() && gEeprom.RX_VFO == vfo_num) {
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-				uint8_t start = isMainOnly() ? 2 : 14;
+				uint8_t start = isMainOnly() ? 0 : 14;
 				UI_PrintStringSmallBold("RX", start, 0, line);
 #else
 				UI_PrintStringSmallBold("RX", 14, 0, line);
@@ -498,7 +498,11 @@ void UI_DisplayMain(void)
 
 		if (IS_MR_CHANNEL(gEeprom.ScreenChannel[vfo_num]))
 		{	// channel mode
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+			const unsigned int x = isMainOnly() ? 0 : 2;
+#else
 			const unsigned int x = 2;
+#endif
 			const bool inputting = gInputBoxIndex != 0 && gEeprom.TX_VFO == vfo_num;
 			if (!inputting)
 				sprintf(String, "M%u", gEeprom.ScreenChannel[vfo_num] + 1);
@@ -509,7 +513,11 @@ void UI_DisplayMain(void)
 		else if (IS_FREQ_CHANNEL(gEeprom.ScreenChannel[vfo_num]))
 		{	// frequency mode
 			// show the frequency band number
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+			const unsigned int x = isMainOnly() ? 0 : 2;
+#else
 			const unsigned int x = 2;
+#endif
 			char * buf = gEeprom.VfoInfo[vfo_num].pRX->Frequency < _1GHz_in_KHz ? "" : "+";
 			sprintf(String, "F%u%s", 1 + gEeprom.ScreenChannel[vfo_num] - FREQ_CHANNEL_FIRST, buf);
 			UI_PrintStringSmallNormal(String, x, 0, line + 1);
@@ -696,16 +704,8 @@ void UI_DisplayMain(void)
 						Level = gVFO_RSSI_bar_level[vfo_num];
 				#endif
 			}
-			if(Level) {
-#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-				if (isMainOnlyAndMainVFO)
-					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH + 2, Level);
-				else
-					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH, Level);
-#else
+			if(Level)
 				DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH, Level);
-#endif
-			}
 		}
 
 		// ************
