@@ -699,7 +699,7 @@ void UI_DisplayMain(void)
 			if(Level) {
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
 				if (isMainOnlyAndMainVFO)
-					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH + 3, Level);
+					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH + 2, Level);
 				else
 					DrawSmallAntennaAndBars(p_line1 + LCD_WIDTH, Level);
 #else
