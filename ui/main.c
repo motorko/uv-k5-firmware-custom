@@ -343,15 +343,18 @@ void UI_DisplayMain(void)
 	}
 
 	unsigned int activeTxVFO = gRxVfoIsActive ? gEeprom.RX_VFO : gEeprom.TX_VFO;
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+	const bool isMainOnlyMode = isMainOnly();
+#endif
 
 	for (unsigned int vfo_num = 0; vfo_num < 2; vfo_num++)
 	{
 
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-		const bool isMainOnlyAndMainVFO = (isMainOnly() && activeTxVFO == vfo_num);
-		const bool isMainOnlyAndNotMainVFO = (isMainOnly() && activeTxVFO != vfo_num);
-		const unsigned int line0 = isMainOnly() ? 1 : 0;
-		const unsigned int line1 = isMainOnly() ? 5 : 4;
+		const bool isMainOnlyAndMainVFO = (isMainOnlyMode && activeTxVFO == vfo_num);
+		const bool isMainOnlyAndNotMainVFO = (isMainOnlyMode && activeTxVFO != vfo_num);
+		const unsigned int line0 = isMainOnlyMode ? 1 : 0;
+		const unsigned int line1 = isMainOnlyMode ? 5 : 4;
 		const unsigned int line       = isMainOnlyAndMainVFO 			? line0
 																		: isMainOnlyAndNotMainVFO ? line1
 																		: (vfo_num == 0) ? line0 : line1;
@@ -445,7 +448,7 @@ void UI_DisplayMain(void)
 		else // active TX VFO
 		{	// highlight the selected/used VFO with a marker
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-			if (!isMainOnly()) {
+			if (!isMainOnlyMode) {
 				if (isMainVFO)
 					memcpy(p_line0 + 0, BITMAP_VFO_Default, sizeof(BITMAP_VFO_Default));
 				else
@@ -475,7 +478,7 @@ void UI_DisplayMain(void)
 				{	// show the TX symbol
 					mode = VFO_MODE_TX;
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-					uint8_t start = isMainOnly() ? 0 : 14;
+					uint8_t start = isMainOnlyMode ? 0 : 14;
 					UI_PrintStringSmallBold("TX", start, 0, line);
 #else
 					UI_PrintStringSmallBold("TX", 14, 0, line);
@@ -488,7 +491,7 @@ void UI_DisplayMain(void)
 			mode = VFO_MODE_RX;
 			if (FUNCTION_IsRx() && gEeprom.RX_VFO == vfo_num) {
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-				uint8_t start = isMainOnly() ? 0 : 14;
+				uint8_t start = isMainOnlyMode ? 0 : 14;
 				UI_PrintStringSmallBold("RX", start, 0, line);
 #else
 				UI_PrintStringSmallBold("RX", 14, 0, line);
@@ -499,7 +502,7 @@ void UI_DisplayMain(void)
 		if (IS_MR_CHANNEL(gEeprom.ScreenChannel[vfo_num]))
 		{	// channel mode
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-			const unsigned int x = isMainOnly() ? 0 : 2;
+			const unsigned int x = isMainOnlyMode ? 0 : 2;
 #else
 			const unsigned int x = 2;
 #endif
@@ -514,7 +517,7 @@ void UI_DisplayMain(void)
 		{	// frequency mode
 			// show the frequency band number
 #ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
-			const unsigned int x = isMainOnly() ? 0 : 2;
+			const unsigned int x = isMainOnlyMode ? 0 : 2;
 #else
 			const unsigned int x = 2;
 #endif
@@ -823,7 +826,14 @@ void UI_DisplayMain(void)
 					center_line = CENTER_LINE_DTMF_DEC;
 
 					sprintf(String, "DTMF %s", gDTMF_RX_live + idx);
+#ifdef ENABLE_SINGLE_VFO_DISPLAY_MODE
+					if (isMainOnlyMode)
+						UI_PrintStringSmallNormal(String, 0, 0, 4);
+					else
+						UI_PrintStringSmallNormal(String, 2, 0, 3);
+#else
 					UI_PrintStringSmallNormal(String, 2, 0, 3);
+#endif
 				}
 			#else
 				if (gSetting_live_DTMF_decoder && gDTMF_RX_index > 0)
