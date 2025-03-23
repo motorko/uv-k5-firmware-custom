@@ -99,6 +99,14 @@ const STEP_Setting_t StepSortedIndexes[] = {
 	STEP_125kHz, STEP_200kHz, STEP_250kHz, STEP_500kHz
 };
 
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+const uint8_t StepMatchedIndexes[] = {
+	STEP_2_5kHz, STEP_5kHz, STEP_6_25kHz, STEP_10kHz, STEP_12_5kHz, STEP_25kHz, STEP_8_33kHz,
+	STEP_0_01kHz, STEP_0_05kHz, STEP_0_1kHz, STEP_0_25kHz, STEP_0_5kHz, STEP_1kHz, STEP_1_25kHz,
+	STEP_15kHz, STEP_30kHz, STEP_50kHz, STEP_100kHz, STEP_125kHz, STEP_250kHz, STEP_500kHz	
+};
+#endif
+
 STEP_Setting_t FREQUENCY_GetStepIdxFromSortedIdx(uint8_t sortedIdx)
 {
 	return StepSortedIndexes[sortedIdx];
@@ -248,3 +256,13 @@ int32_t RX_freq_check(const uint32_t Frequency)
 
 	return 0;   // OK frequency
 }
+
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+uint8_t FREQUENCY_GetStepIdxFromStepFrequency(uint16_t stepFrequency) 
+{
+	for(uint8_t i = 0; i < ARRAY_SIZE(gStepFrequencyTable); i++)
+		if(gStepFrequencyTable[i] == stepFrequency)
+			return StepMatchedIndexes[i];
+	return 0;
+}
+#endif

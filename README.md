@@ -50,6 +50,8 @@ Anyway, have fun.
    * reordered and renamed menu entries
    * LCD interference crash fix
    * many others...
+* mods introduced by kamilsss655:
+   * `ENABLE_SPECTRUM_COPY_VFO` allowing to exit the fine tuning screen with PTT button and copy current peak frequency, modulation, step, bandwidth to VFO. Also entering spectrum will carry these settings from VFO (full integration). This allows you to save and respond to the frequencies found much faster.
 * other mods introduced by me:
    * fixed a bug in the spectrum analyzer logic that caused the first column to remain blank.
    * resolved an issue with incomplete spectrum display in ScnRng mode.
@@ -127,6 +129,7 @@ You'll find the options at the top of "Makefile" ('0' = disable, '1' = enable) .
 | ENABLE_SCAN_RANGES_ADAPTIVE_STEPS | Dynamically adjusts the steps count in SCAN_RANGES mode. |
 | ENABLE_SINGLE_VFO_DISPLAY_MODE | Displays only the main VFO (single VFO mode) when selected. |
 | ENABLE_FLASHLIGHT_ONOFF_ONLY  | Basic flashlight mode (on/off only) |
+| ENABLE_SPECTRUM_COPY_VFO | Pressing PTT in spectrum fine tuning screen will exit and copy current peak frequency, bw, step, modulation to current VFO, also entering spectrum will carry these settings from VFO (full integration)
 |🧰 **DEBUGGING** ||
 | ENABLE_AM_FIX_SHOW_DATA| displays settings used by  AM-fix when AM transmission is received |
 | ENABLE_AGC_SHOW_DATA | displays AGC settings |

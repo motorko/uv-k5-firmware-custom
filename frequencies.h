@@ -41,7 +41,7 @@ typedef enum  {
 	BAND_N_ELEM
 } FREQUENCY_Band_t;
 
-extern const freq_band_table_t frequencyBandTable[];
+extern const freq_band_table_t frequencyBandTable[7];
 
 typedef enum {
 // standard steps
@@ -74,7 +74,7 @@ typedef enum {
 } STEP_Setting_t;
 
 
-extern const uint16_t gStepFrequencyTable[];
+extern const uint16_t gStepFrequencyTable[STEP_N_ELEM];
 
 #ifdef ENABLE_NOAA
 	extern const uint32_t NoaaFrequencyTable[10];
@@ -89,5 +89,9 @@ uint32_t		 FREQUENCY_GetSortedIdxFromStepIdx(uint8_t step);
 
 int32_t          TX_freq_check(uint32_t Frequency);
 int32_t          RX_freq_check(uint32_t Frequency);
+
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+uint8_t          FREQUENCY_GetStepIdxFromStepFrequency(uint16_t stepFrequency);
+#endif
 
 #endif

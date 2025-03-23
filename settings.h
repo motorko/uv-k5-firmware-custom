@@ -271,5 +271,8 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 void SETTINGS_SaveBatteryCalibration(const uint16_t * batteryCalibration);
 void SETTINGS_UpdateChannel(uint8_t channel, const VFO_Info_t *pVFO, bool keep);
 void SETTINGS_WriteBuildOptions(void);
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+void SETTINGS_SetVfoFrequency(uint32_t frequency);
+#endif
 
 #endif

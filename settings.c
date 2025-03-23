@@ -26,6 +26,9 @@
 #include "misc.h"
 #include "settings.h"
 #include "ui/menu.h"
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+	#include "frequencies.h"
+#endif
 
 static const uint32_t gDefaultFrequencyTable[] =
 {
@@ -763,3 +766,61 @@ buf[1] = 0
 ;
 	EEPROM_WriteBuffer(0x1FF0, buf);
 }
+
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+void SETTINGS_SetVfoFrequency(uint32_t frequency) {
+	const uint8_t Vfo = gEeprom.TX_VFO;
+	// clamp the frequency entered to some valid value
+	if (frequency < frequencyBandTable[0].lower)
+	{
+		frequency = frequencyBandTable[0].lower;
+	}
+	else if (frequency > frequencyBandTable[BAND_N_ELEM - 1].upper)
+	{
+		frequency = frequencyBandTable[BAND_N_ELEM - 1].upper;
+	}
+	else
+	if (frequency >= BX4819_band1.upper && frequency < BX4819_band2.lower)
+	{
+		const uint32_t center = (BX4819_band1.upper + BX4819_band2.lower) / 2;
+		frequency = (frequency < center) ? BX4819_band1.upper : BX4819_band2.lower;
+	}
+	else
+	if (frequency > frequencyBandTable[ARRAY_SIZE(frequencyBandTable) - 1].upper)
+	{
+		frequency = frequencyBandTable[ARRAY_SIZE(frequencyBandTable) - 1].upper;
+	}
+
+	{
+		const FREQUENCY_Band_t band = FREQUENCY_GetBand(frequency);
+
+		#ifdef ENABLE_VOICE
+			gAnotherVoiceID = (VOICE_ID_t)Key;
+		#endif
+
+		if (gTxVfo->Band != band)
+		{
+			gTxVfo->Band               = band;
+			gEeprom.ScreenChannel[Vfo] = band + FREQ_CHANNEL_FIRST;
+			gEeprom.FreqChannel[Vfo]   = band + FREQ_CHANNEL_FIRST;
+
+			SETTINGS_SaveVfoIndices();
+
+			RADIO_ConfigureChannel(Vfo, VFO_CONFIGURE_RELOAD);
+		}
+
+		// Autoset stepFrequency based on step setting
+		gTxVfo->StepFrequency = gStepFrequencyTable[gTxVfo->STEP_SETTING];
+
+		frequency = FREQUENCY_RoundToStep(frequency, gTxVfo->StepFrequency);
+
+		if (frequency >= BX4819_band1.upper && frequency < BX4819_band2.lower)
+		{	// clamp the frequency to the limit
+			const uint32_t center = (BX4819_band1.upper + BX4819_band2.lower) / 2;
+			frequency = (frequency < center) ? BX4819_band1.upper - gTxVfo->StepFrequency : BX4819_band2.lower;
+		}
+
+		gTxVfo->freq_config_RX.Frequency = frequency;
+	}
+}
+#endif
