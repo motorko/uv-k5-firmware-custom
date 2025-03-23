@@ -324,7 +324,9 @@ static void ExitAndCopyToVfo() {
   SETTINGS_SetVfoFrequency(peak.f);
 
   gRequestSaveChannel = 1;
- 
+  gScanRangeStart = 0;
+  gScanRangeStop = 0;
+  SetState(previousState);
   // Additional delay to debounce keys
   SYSTEM_DelayMs(200);
 
