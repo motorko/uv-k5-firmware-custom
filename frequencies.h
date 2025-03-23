@@ -90,4 +90,8 @@ uint32_t		 FREQUENCY_GetSortedIdxFromStepIdx(uint8_t step);
 int32_t          TX_freq_check(uint32_t Frequency);
 int32_t          RX_freq_check(uint32_t Frequency);
 
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+uint8_t          FREQUENCY_GetStepIdxFromStepFrequency(uint16_t stepFrequency);
+#endif
+
 #endif
