@@ -26,6 +26,9 @@
 #include "frequencies.h"
 #include "ui/helper.h"
 #include "ui/main.h"
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+  #include "common.h"
+#endif
 
 struct FrequencyBandInfo {
   uint32_t lower;
@@ -310,6 +313,32 @@ static void TuneToPeak() {
   scanInfo.i = peak.i;
   SetF(scanInfo.f);
 }
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+static void ExitAndCopyToVfo() {
+  RestoreRegisters();
+
+  gTxVfo->STEP_SETTING = FREQUENCY_GetStepIdxFromStepFrequency(GetScanStep());
+  gTxVfo->Modulation = settings.modulationType;
+  gTxVfo->CHANNEL_BANDWIDTH = settings.listenBw;
+
+  SETTINGS_SetVfoFrequency(peak.f);
+
+  gRequestSaveChannel = 1;
+ 
+  // Additional delay to debounce keys
+  SYSTEM_DelayMs(200);
+
+  isInitialized = false;
+}
+
+uint8_t GetScanStepFromStepFrequency(uint16_t stepFrequency) 
+{
+	for(uint8_t i = 0; i < ARRAY_SIZE(scanStepValues); i++)
+		if(scanStepValues[i] == stepFrequency)
+			return i;
+	return S_STEP_25_0kHz;
+}
+#endif
 
 static void DeInitSpectrum() {
   SetF(initialFreq);
@@ -1006,6 +1035,9 @@ void OnKeyDownStill(KEY_Code_t key) {
     // TODO: start transmit
     /* BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
     BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, true); */
+#ifdef ENABLE_SPECTRUM_COPY_VFO
+      ExitAndCopyToVfo();
+#endif
     break;
   case KEY_MENU:
     if (menuState == ARRAY_SIZE(registerSpecs) - 1) {
@@ -1329,11 +1361,16 @@ void APP_RunSpectrum() {
   redrawScreen = true;
   newScanStart = true;
 
-
   ToggleRX(true), ToggleRX(false); // hack to prevent noise when squelch off
+#ifdef ENABLE_SPECTRUM_COPY_VFO
   RADIO_SetModulation(settings.modulationType = gTxVfo->Modulation);
-
+  BK4819_SetFilterBandwidth(settings.listenBw = gTxVfo->CHANNEL_BANDWIDTH, false);
+  settings.scanStepIndex = GetScanStepFromStepFrequency(gTxVfo->StepFrequency);
+#elif
+  RADIO_SetModulation(settings.modulationType = gTxVfo->Modulation);
   BK4819_SetFilterBandwidth(settings.listenBw = BK4819_FILTER_BW_WIDE, false);
+#endif
+
 
   RelaunchScan();
 
