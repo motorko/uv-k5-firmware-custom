@@ -770,6 +770,16 @@ buf[1] = 0
 #ifdef ENABLE_SPECTRUM_COPY_VFO
 void SETTINGS_SetVfoFrequency(uint32_t frequency) {
 	const uint8_t Vfo = gEeprom.TX_VFO;
+	// clamp the frequency entered to some valid value
+	if (frequency < frequencyBandTable[0].lower)
+	{
+		frequency = frequencyBandTable[0].lower;
+	}
+	else if (frequency > frequencyBandTable[BAND_N_ELEM - 1].upper)
+	{
+		frequency = frequencyBandTable[BAND_N_ELEM - 1].upper;
+	}
+	else
 	if (frequency >= BX4819_band1.upper && frequency < BX4819_band2.lower)
 	{
 		const uint32_t center = (BX4819_band1.upper + BX4819_band2.lower) / 2;
